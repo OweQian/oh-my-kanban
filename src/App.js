@@ -2,7 +2,7 @@
 import logo from './logo.svg';
 import { css } from '@emotion/react';
 import './App.css';
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 const KanbanBoard = ({children}) => (<main css={css`
   flex: 10;
@@ -109,6 +109,10 @@ const KanbanCard = ({title, status}) => {
 
 const KanbanNewCard = ({onSubmit}) => {
   const [title, setTitle] = useState('');
+  const inputElement = useRef(null);
+  useEffect(() => {
+    inputElement.current.focus();
+  }, []);
   const handleChange = (e) => setTitle(e.target.value);
   const handleKeyDown = e => {
     if (e.key === 'Enter') {
@@ -125,7 +129,7 @@ const KanbanNewCard = ({onSubmit}) => {
           width: 80%;
         }
       `}>
-        <input type="text" value={title} onChange={handleChange} onKeyDown={handleKeyDown}/>
+        <input ref={inputElement} type="text" value={title} onChange={handleChange} onKeyDown={handleKeyDown}/>
       </div>
     </li>
   )
