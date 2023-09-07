@@ -1,139 +1,13 @@
 /** @jsxImportSource @emotion/react */
 import logo from './logo.svg';
-import { css } from '@emotion/react';
+import KanbanBoard from "./KanbanBoard";
+import KanbanColumn from "./KanbanColumn";
+import KanbanCard from "./KanbanCard";
+import KanbanNewCard from "./KanbanNewCard";
+
 import './App.css';
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 
-const KanbanBoard = ({children}) => (<main css={css`
-  flex: 10;
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  margin: 0 1rem 1rem;
-`}>{children}</main>)
-
-const KanbanColumn = ({children, bgColor, title}) => {
-  return (
-    <section css={
-      css`
-        flex: 1 1;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid gray;
-        border-radius: 1rem;
-        background-color: ${bgColor};
-        & > h2 {
-          margin: .6rem 1rem;
-          padding-bottom: .6rem;
-          border-bottom: 1px solid gray;
-          & > button {
-            float: right;
-            margin-top: 0.2rem;
-            padding: 0.2rem 0.5rem;
-            border: 0;
-            border-radius: 1rem;
-            height: 1.8rem;
-            line-height: 1rem;
-            font-size: 1rem;
-          }
-        }  
-        & > ul {
-          flex: 1;
-          flex-basis: 0;
-          margin: 1rem;
-          padding: 0;
-          overflow: auto;
-        }  
-    `}>
-      <h2>{title}</h2>
-      <ul>{children}</ul>
-    </section>
-  )
-}
-
-const kanbanCardStyles = css`
-  margin-bottom: 1rem;
-  padding: 0.6rem 1rem;
-  border: 1px solid gray;
-  border-radius: 1rem;
-  list-style: none;
-  background-color: rgba(255, 255, 255, 0.4);
-  text-align: left;
-  &:hover {
-    box-shadow: 0 .2rem .2rem rgba(0, 0, 0, .2), inset 0 1px #fff;
-  }
-`
-
-const kanbanCardTitleStyle = css`
-  min-height: 3rem;
-`
-const MINUTE = 60 * 1000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-const UPDATE_INTERVAL = MINUTE;
-
-const KanbanCard = ({title, status}) => {
-  const [displayTime, setDisplayTime] = useState(status);
-  useEffect(() => {
-    const updateDisplayTime = () => {
-      const timePassed = new Date() - new Date(status);
-      let relativeTime = '刚刚';
-      if (MINUTE <= timePassed && timePassed < HOUR) {
-        relativeTime = `${Math.ceil(timePassed / MINUTE)} 分钟前`;
-      } else if (HOUR <= timePassed && timePassed < DAY) {
-        relativeTime = `${Math.ceil(timePassed / HOUR)} 小时前`;
-      } else if (DAY <= timePassed) {
-        relativeTime = `${Math.ceil(timePassed / DAY)} 天前`;
-      }
-      setDisplayTime(relativeTime);
-    };
-
-    const intervalId = setInterval(updateDisplayTime, UPDATE_INTERVAL);
-    updateDisplayTime();
-    return () => {
-      clearInterval(intervalId);
-    }
-  }, [status]);
-
-  return (
-    <li css={kanbanCardStyles}>
-      <div css={kanbanCardTitleStyle}>{title}</div>
-      <div css={css`
-        text-align: right;
-        font-size: 0.8rem;
-        color: #333;
-      `} title={status}>{displayTime}</div>
-    </li>
-  )
-}
-
-const KanbanNewCard = ({onSubmit}) => {
-  const [title, setTitle] = useState('');
-  const inputElement = useRef(null);
-  useEffect(() => {
-    inputElement.current.focus();
-  }, []);
-  const handleChange = (e) => setTitle(e.target.value);
-  const handleKeyDown = e => {
-    if (e.key === 'Enter') {
-      onSubmit(title);
-    }
-  };
-
-  return (
-    <li css={kanbanCardStyles}>
-      <h3>添加新卡片</h3>
-      <div css={css`
-        ${kanbanCardTitleStyle}
-        & > input[type="text"] {
-          width: 80%;
-        }
-      `}>
-        <input ref={inputElement} type="text" value={title} onChange={handleChange} onKeyDown={handleKeyDown}/>
-      </div>
-    </li>
-  )
-}
 const COLUMN_BG_COLORS = {
   loading: '#E3E3E3',
   todo: '#C9AF97',
@@ -142,6 +16,9 @@ const COLUMN_BG_COLORS = {
 }
 
 const DATA_STORE_KEY = 'kanban-data-store';
+const COLUMN_KEY_TODO = 'todo';
+const COLUMN_KEY_ONGOING = 'ongoing';
+const COLUMN_KEY_DONE = 'done';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -161,6 +38,10 @@ function App() {
     { title: '开发任务-2', status: '2023-08-22 18:15' },
     { title: '测试任务-1', status: '2023-08-22 18:15' }
   ])
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [dragSource, setDragSource] = useState(null);
+  const [dragTarget, setDragTarget] = useState(null);
+
   useEffect(() => {
     const data = window.localStorage.getItem(DATA_STORE_KEY);
     setTimeout(() => {
@@ -191,6 +72,22 @@ function App() {
     });
     window.localStorage.setItem(DATA_STORE_KEY, data);
   }
+  const handleDrop = (evt) => {
+    if (!draggedItem || !dragSource || !dragTarget || dragTarget === dragSource) {
+      return;
+    }
+    const updaters = {
+      [COLUMN_KEY_TODO]: setTodoList,
+      [COLUMN_KEY_ONGOING]: setOngoingList,
+      [COLUMN_KEY_DONE]: setDoneList,
+    }
+    if (dragSource) {
+      updaters[dragSource](currentState => currentState.filter(item => !Object.is(item, draggedItem)));
+    }
+    if (dragTarget) {
+      updaters[dragTarget](currentState => [draggedItem, ...currentState]);
+    }
+  }
   return (
     <div className="App">
       <header className="App-header">
@@ -201,20 +98,20 @@ function App() {
         {isLoading ? <KanbanColumn title="读取中..." bgColor={COLUMN_BG_COLORS.loading} />
          : (
           <>
-            <KanbanColumn bgColor={COLUMN_BG_COLORS.todo} title={<>待处理<button onClick={handleAdd} disabled={showAdd}>⊕ 添加新卡片</button></>}>
+            <KanbanColumn onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_TODO : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_TODO : null)} bgColor={COLUMN_BG_COLORS.todo} title={<>待处理<button onClick={handleAdd} disabled={showAdd}>⊕ 添加新卡片</button></>}>
               {showAdd && <KanbanNewCard onSubmit={handleSubmit} />}
               {
-                todoList.map(props => <KanbanCard key={props.title} {...props} />)
+                todoList.map(props => <KanbanCard onDragStart={() => setDraggedItem(props)} key={props.title} {...props} />)
               }
             </KanbanColumn>
-            <KanbanColumn bgColor={COLUMN_BG_COLORS.ongoing} title="进行中">
+            <KanbanColumn onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_ONGOING : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_ONGOING : null)} bgColor={COLUMN_BG_COLORS.ongoing} title="进行中">
               {
-                ongoingList.map(props => <KanbanCard key={props.title} {...props} />)
+                ongoingList.map(props => <KanbanCard onDragStart={() => setDraggedItem(props)} key={props.title} {...props} />)
               }
             </KanbanColumn>
-            <KanbanColumn bgColor={COLUMN_BG_COLORS.done} title="已完成">
+            <KanbanColumn onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_DONE : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_DONE : null)}  bgColor={COLUMN_BG_COLORS.done} title="已完成">
               {
-                doneList.map(props => <KanbanCard key={props.title} {...props} />)
+                doneList.map(props => <KanbanCard onDragStart={() => setDraggedItem(props)} key={props.title} {...props} />)
               }
             </KanbanColumn>
           </>
