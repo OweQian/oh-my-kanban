@@ -13,7 +13,7 @@ const KanbanNewCard = ({onSubmit}) => {
   const handleChange = (e) => setTitle(e.target.value);
   const handleKeyDown = e => {
     if (e.key === 'Enter') {
-      onSubmit(title);
+      onSubmit({title, status: new Date().toString()});
     }
   };
 

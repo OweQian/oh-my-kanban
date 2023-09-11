@@ -34,13 +34,13 @@ const kanbanColumnStyles = css`
   }  
 `;
 
-const KanbanColumn = ({children, bgColor, title, onDrop, setIsDragSource = () => {}, setIsDragTarget = () => {}, cardList = [], setDraggedItem, canAddNew, onAdd}) => {
+const KanbanColumn = ({bgColor, title, onDrop, setIsDragSource = () => {}, setIsDragTarget = () => {}, cardList = [], setDraggedItem, canAddNew, onAdd}) => {
   const [showAdd, setShowAdd] = useState(false);
   const handleAdd = (e) => {
     setShowAdd(true);
   };
-  const handleSubmit = (title) => {
-    onAdd && onAdd(title)
+  const handleSubmit = (newCard) => {
+    onAdd && onAdd(newCard)
     setShowAdd(false);
   }
   return (
