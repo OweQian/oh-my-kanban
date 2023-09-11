@@ -34,7 +34,7 @@ const kanbanColumnStyles = css`
   }  
 `;
 
-const KanbanColumn = ({bgColor, title, onDrop, setIsDragSource = () => {}, setIsDragTarget = () => {}, cardList = [], setDraggedItem, canAddNew, onAdd}) => {
+const KanbanColumn = ({bgColor, title, onDrop, setIsDragSource = () => {}, setIsDragTarget = () => {}, cardList = [], setDraggedItem, canAddNew, onAdd, onRemove}) => {
   const [showAdd, setShowAdd] = useState(false);
   const handleAdd = (e) => {
     setShowAdd(true);
@@ -80,7 +80,7 @@ const KanbanColumn = ({bgColor, title, onDrop, setIsDragSource = () => {}, setIs
       <ul>
         {canAddNew && showAdd && <KanbanNewCard onSubmit={handleSubmit} />}
         {
-          cardList.map(props => <KanbanCard onDragStart={() => setDraggedItem && setDraggedItem(props)} key={props.title} {...props} />)
+          cardList.map(props => <KanbanCard onRemove={onRemove} onDragStart={() => setDraggedItem && setDraggedItem(props)} key={props.title} {...props} />)
         }
       </ul>
     </section>

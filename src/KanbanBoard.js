@@ -59,6 +59,7 @@ const KanbanBoard = ({isLoading = true, todoList, ongoingList, doneList, onAdd, 
               title="进行中">
             </KanbanColumn>
             <KanbanColumn
+              onRemove={onRemove.bind(null, COLUMN_KEY_DONE)}
               onDrop={handleDrop}
               cardList={doneList}
               setDraggedItem={setDraggedItem}

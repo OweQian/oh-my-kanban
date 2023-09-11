@@ -2,6 +2,7 @@
 import logo from './logo.svg';
 import KanbanBoard, {COLUMN_KEY_DONE, COLUMN_KEY_ONGOING, COLUMN_KEY_TODO} from "./KanbanBoard";
 import './App.css';
+import AdminContext from "./context/AdminContext";
 import {useEffect, useState} from "react";
 
 const DATA_STORE_KEY = 'kanban-data-store';
@@ -25,6 +26,12 @@ function App() {
     { title: '测试任务-1', status: '2023-08-22 18:15' }
   ])
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const handleToggleAdmin = (evt) => {
+    setIsAdmin(!isAdmin);
+  };
+
   const updaters = {
     [COLUMN_KEY_TODO]: setTodoList,
     [COLUMN_KEY_ONGOING]: setOngoingList,
@@ -36,7 +43,7 @@ function App() {
   }
 
   const handleRemove = (column, cardToRemove) => {
-    updaters[column](currentState => currentState.filter(item => !Object.is(item, cardToRemove)));
+    updaters[column](currentState => currentState.filter(item => item.title !== cardToRemove.title));
   }
   useEffect(() => {
     const data = window.localStorage.getItem(DATA_STORE_KEY);
@@ -63,17 +70,27 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>我的看板 <button onClick={handleSaveAll}>保存所有卡片</button></h1>
+        <h1>
+          我的看板
+          <button onClick={handleSaveAll}>保存所有卡片</button>
+          <label htmlFor="">
+            <input type="checkbox" value={isAdmin} onChange={handleToggleAdmin}/>
+            管理员模式
+          </label>
+        </h1>
         <img src={logo} className="App-logo" alt="logo" />
       </header>
-      <KanbanBoard
-        isLoading={isLoading}
-        todoList={todoList}
-        ongoingList={ongoingList}
-        doneList={doneList}
-        onAdd={handleAdd}
-        onRemove={handleRemove}>
-      </KanbanBoard>
+      <AdminContext.Provider value={isAdmin}>
+        <KanbanBoard
+          isLoading={isLoading}
+          todoList={todoList}
+          ongoingList={ongoingList}
+          doneList={doneList}
+          onAdd={handleAdd}
+          onRemove={handleRemove}>
+        </KanbanBoard>
+      </AdminContext.Provider>
+
     </div>
   );
 }
