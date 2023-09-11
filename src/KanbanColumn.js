@@ -1,5 +1,8 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
+import KanbanCard from "./KanbanCard";
+import {useState} from "react";
+import KanbanNewCard from "./KanbanNewCard";
 
 const kanbanColumnStyles = css`
   flex: 1 1;
@@ -31,7 +34,15 @@ const kanbanColumnStyles = css`
   }  
 `;
 
-const KanbanColumn = ({children, bgColor, title, onDrop, setIsDragSource = () => {}, setIsDragTarget = () => {}}) => {
+const KanbanColumn = ({children, bgColor, title, onDrop, setIsDragSource = () => {}, setIsDragTarget = () => {}, cardList = [], setDraggedItem, canAddNew, onAdd}) => {
+  const [showAdd, setShowAdd] = useState(false);
+  const handleAdd = (e) => {
+    setShowAdd(true);
+  };
+  const handleSubmit = (title) => {
+    onAdd && onAdd(title)
+    setShowAdd(false);
+  }
   return (
     <section
       onDragStart={() => setIsDragSource(true)}
@@ -58,8 +69,20 @@ const KanbanColumn = ({children, bgColor, title, onDrop, setIsDragSource = () =>
         ${kanbanColumnStyles}
         background-color: ${bgColor};
       `}>
-      <h2>{title}</h2>
-      <ul>{children}</ul>
+      <h2>
+        {title}
+        {
+          canAddNew && (
+            <button onClick={handleAdd} disabled={showAdd}>⊕ 添加新卡片</button>
+          )
+        }
+      </h2>
+      <ul>
+        {canAddNew && showAdd && <KanbanNewCard onSubmit={handleSubmit} />}
+        {
+          cardList.map(props => <KanbanCard onDragStart={() => setDraggedItem && setDraggedItem(props)} key={props.title} {...props} />)
+        }
+      </ul>
     </section>
   )
 }

@@ -2,8 +2,6 @@
 import logo from './logo.svg';
 import KanbanBoard from "./KanbanBoard";
 import KanbanColumn from "./KanbanColumn";
-import KanbanCard from "./KanbanCard";
-import KanbanNewCard from "./KanbanNewCard";
 
 import './App.css';
 import {useEffect, useState} from "react";
@@ -22,7 +20,6 @@ const COLUMN_KEY_DONE = 'done';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
   const [todoList, setTodoList] = useState([
     { title: '开发任务-1', status: '2023-08-30 18:15' },
     { title: '开发任务-3', status: '2023-08-30 18:15' },
@@ -54,16 +51,7 @@ function App() {
       setIsLoading(false);
     }, 1000);
   }, []);
-  const handleAdd = (e) => {
-    setShowAdd(true);
-  };
-  const handleSubmit = (title) => {
-    setTodoList(currentTodoList => [
-      {title, status: new Date().toDateString()},
-      ...currentTodoList,
-    ])
-    setShowAdd(false);
-  }
+
   const handleSaveAll = () => {
     const data = JSON.stringify({
       todoList,
@@ -88,6 +76,12 @@ function App() {
       updaters[dragTarget](currentState => [draggedItem, ...currentState]);
     }
   }
+  const handleSubmit = (title) => {
+    setTodoList(currentTodoList => ([
+      {title, status: new Date().toString()},
+      ...currentTodoList
+    ]))
+  }
   return (
     <div className="App">
       <header className="App-header">
@@ -98,21 +92,11 @@ function App() {
         {isLoading ? <KanbanColumn title="读取中..." bgColor={COLUMN_BG_COLORS.loading} />
          : (
           <>
-            <KanbanColumn onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_TODO : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_TODO : null)} bgColor={COLUMN_BG_COLORS.todo} title={<>待处理<button onClick={handleAdd} disabled={showAdd}>⊕ 添加新卡片</button></>}>
-              {showAdd && <KanbanNewCard onSubmit={handleSubmit} />}
-              {
-                todoList.map(props => <KanbanCard onDragStart={() => setDraggedItem(props)} key={props.title} {...props} />)
-              }
+            <KanbanColumn cardList={todoList} setDraggedItem={setDraggedItem} onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_TODO : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_TODO : null)} bgColor={COLUMN_BG_COLORS.todo} title="待处理" canAddNew onAdd={handleSubmit}>
             </KanbanColumn>
-            <KanbanColumn onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_ONGOING : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_ONGOING : null)} bgColor={COLUMN_BG_COLORS.ongoing} title="进行中">
-              {
-                ongoingList.map(props => <KanbanCard onDragStart={() => setDraggedItem(props)} key={props.title} {...props} />)
-              }
+            <KanbanColumn setDraggedItem={setDraggedItem} cardList={ongoingList}  onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_ONGOING : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_ONGOING : null)} bgColor={COLUMN_BG_COLORS.ongoing} title="进行中">
             </KanbanColumn>
-            <KanbanColumn onDrop={handleDrop} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_DONE : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_DONE : null)}  bgColor={COLUMN_BG_COLORS.done} title="已完成">
-              {
-                doneList.map(props => <KanbanCard onDragStart={() => setDraggedItem(props)} key={props.title} {...props} />)
-              }
+            <KanbanColumn onDrop={handleDrop} cardList={doneList} setDraggedItem={setDraggedItem} setIsDragTarget={(isTgt) => setDragTarget(isTgt ? COLUMN_KEY_DONE : null)} setIsDragSource={(isSrc) => setDragSource(isSrc ? COLUMN_KEY_DONE : null)}  bgColor={COLUMN_BG_COLORS.done} title="已完成">
             </KanbanColumn>
           </>
         )}
