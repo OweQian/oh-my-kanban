@@ -1,5 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import logo from './logo.svg';
+import { useImmer } from "use-immer";
 import KanbanBoard, {COLUMN_KEY_DONE, COLUMN_KEY_ONGOING, COLUMN_KEY_TODO} from "./KanbanBoard";
 import './App.css';
 import AdminContext from "./context/AdminContext";
@@ -10,7 +11,7 @@ const DATA_STORE_KEY = 'kanban-data-store';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [todoList, setTodoList] = useState([
+  const [todoList, setTodoList] = useImmer([
     { title: '开发任务-1', status: '2023-08-30 18:15' },
     { title: '开发任务-3', status: '2023-08-30 18:15' },
     { title: '开发任务-5', status: '2023-08-30 18:15' },
@@ -39,7 +40,11 @@ function App() {
   }
 
   const handleAdd = (column, newCard) => {
-    updaters[column](currentState => ([newCard, ...currentState]));
+    if (column === COLUMN_KEY_TODO) {
+      updaters[column](draft => draft.unshift({...newCard}));
+    } else {
+      updaters[column](currentState => ([newCard, ...currentState]));
+    }
   }
 
   const handleRemove = (column, cardToRemove) => {
